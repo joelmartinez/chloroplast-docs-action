@@ -16,7 +16,7 @@ jobs:
       - name: Build Documentation with Chloroplast
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: docs/config.yml
+          config: docs/SiteMap.yml
           outpath: documentation-output
           sdk_version: '8.0.x'
           extra_args: '--verbose'
