@@ -1,0 +1,149 @@
+name: 'Build Docs with Chloroplast'
+description: 'A composite action to build documentation using the Chloroplast .NET tool'
+author: 'Joel Martinez'
+
+inputs:
+  config:
+    description: 'Path to the Chloroplast config file'
+    required: true
+  outpath:
+    description: 'Path where to put the generated documentation output'
+    required: true
+  sdk_version:
+    description: '.NET SDK version to use'
+    required: false
+    default: '8.0.x'
+  version:
+    description: 'Chloroplast tool version to install (if not using manifest)'
+    required: false
+    default: 'latest'
+  working_directory:
+    description: 'Working directory for running commands'
+    required: false
+    default: '.'
+  manifest_directory:
+    description: 'Directory containing dotnet-tools.json manifest'
+    required: false
+    default: '.'
+  extra_args:
+    description: 'Additional CLI arguments for chloroplast build command'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.sdk_version }}
+    
+    - name: Log environment info
+      shell: bash
+      run: |
+        echo "::group::Environment Information"
+        echo "Working directory: ${{ inputs.working_directory }}"
+        echo "Config file: ${{ inputs.config }}"
+        echo "Output path: ${{ inputs.outpath }}"
+        echo "SDK version: ${{ inputs.sdk_version }}"
+        echo "Tool version: ${{ inputs.version }}"
+        echo "Manifest directory: ${{ inputs.manifest_directory }}"
+        echo "Extra args: ${{ inputs.extra_args }}"
+        dotnet --version
+        echo "::endgroup::"
+    
+    - name: Check for dotnet-tools.json manifest
+      id: check-manifest
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        if [ -f "${{ inputs.manifest_directory }}/dotnet-tools.json" ]; then
+          echo "::notice::Found dotnet-tools.json manifest at ${{ inputs.manifest_directory }}/dotnet-tools.json"
+          echo "has_manifest=true" >> $GITHUB_OUTPUT
+        else
+          echo "::notice::No dotnet-tools.json manifest found, will install Chloroplast tool directly"
+          echo "has_manifest=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Restore tools from manifest
+      if: steps.check-manifest.outputs.has_manifest == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "::group::Restoring tools from manifest"
+        dotnet tool restore --tool-manifest "${{ inputs.manifest_directory }}/dotnet-tools.json"
+        echo "::endgroup::"
+    
+    - name: Install Chloroplast tool from NuGet
+      if: steps.check-manifest.outputs.has_manifest == 'false'
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "::group::Installing Chloroplast tool from NuGet"
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          dotnet tool install --global Chloroplast.Tool
+        else
+          dotnet tool install --global Chloroplast.Tool --version "${{ inputs.version }}"
+        fi
+        echo "::endgroup::"
+    
+    - name: Verify Chloroplast installation
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "::group::Verifying Chloroplast installation"
+        if command -v chloroplast &> /dev/null; then
+          chloroplast --version
+        elif dotnet tool list --global | grep -q "chloroplast.tool"; then
+          dotnet chloroplast --version
+        else
+          echo "::error::Chloroplast tool not found"
+          exit 1
+        fi
+        echo "::endgroup::"
+    
+    - name: Build documentation with Chloroplast
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "::group::Building documentation with Chloroplast"
+        
+        # Build the command with required parameters
+        CHLOROPLAST_CMD="chloroplast build --config '${{ inputs.config }}' --output '${{ inputs.outpath }}'"
+        
+        # Add extra arguments if provided
+        if [ -n "${{ inputs.extra_args }}" ]; then
+          CHLOROPLAST_CMD="$CHLOROPLAST_CMD ${{ inputs.extra_args }}"
+        fi
+        
+        echo "Running: $CHLOROPLAST_CMD"
+        
+        # Try running chloroplast directly first, fallback to dotnet chloroplast
+        if command -v chloroplast &> /dev/null; then
+          eval $CHLOROPLAST_CMD
+        else
+          # Replace 'chloroplast' with 'dotnet chloroplast' for local tool execution
+          DOTNET_CMD=$(echo "$CHLOROPLAST_CMD" | sed 's/^chloroplast/dotnet chloroplast/')
+          echo "Fallback command: $DOTNET_CMD"
+          eval $DOTNET_CMD
+        fi
+        
+        echo "::endgroup::"
+    
+    - name: Verify output
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        echo "::group::Verifying output"
+        if [ -d "${{ inputs.outpath }}" ]; then
+          echo "::notice::Documentation output generated successfully at ${{ inputs.outpath }}"
+          echo "Output directory contents:"
+          ls -la "${{ inputs.outpath }}" | head -20
+        else
+          echo "::warning::Output directory ${{ inputs.outpath }} not found"
+        fi
+        echo "::endgroup::"
+
+branding:
+  icon: 'book-open'
+  color: 'green'
