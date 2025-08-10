@@ -182,14 +182,15 @@ jobs:
 
 ### Common Issues
 
-1. **Config file not found**: Ensure the `config` path is relative to the `working_directory`
+1. **Config file not found**: Ensure the `config` path is relative to either the `working_directory` or the repository root. The action will automatically check both locations.
 2. **Tool installation fails**: Check that the specified `version` exists on NuGet
 3. **Permission errors**: Make sure the `outpath` directory is writable
 
 ### Debug Output
 
 The action provides detailed logging. Check the workflow logs for:
-- Environment information
+- Environment information (including working directory and workspace paths)
+- Config file path resolution details
 - Tool installation status  
 - Command execution details
 - Output verification results
