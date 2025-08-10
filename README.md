@@ -47,7 +47,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
     config: src/docs/SiteMap.yml
     outpath: build/documentation
     sdk_version: '8.0.x'
-    version: '1.2.3'  # Specific Chloroplast tool version
+    version: '0.7.139'  # Specific Chloroplast tool version
     working_directory: ./src
     extra_args: '--verbose --theme modern'
 ```
@@ -59,7 +59,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
 | `config` | Path to the Chloroplast config file | ✅ Yes | - |
 | `outpath` | Path where to put the generated documentation output | ✅ Yes | - |
 | `sdk_version` | .NET SDK version to use | No | `8.0.x` |
-| `version` | Chloroplast tool version to install (if not using manifest) | No | `0.7.139` |
+| `version` | Chloroplast tool version to install (if not using manifest) | No | `latest` |
 | `working_directory` | Working directory for running commands | No | `.` |
 | `manifest_directory` | Directory containing dotnet-tools.json manifest | No | `.` |
 | `extra_args` | Additional CLI arguments for chloroplast build command | No | `` |
