@@ -109,8 +109,44 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       run: |
         echo "::group::Building documentation with Chloroplast"
+
+        # Debug: Show current working directory and config file location
+        echo "Current working directory: $(pwd)"
+        echo "Config file input: ${{ inputs.rootpath }}"
+        echo "Output path input: ${{ inputs.outpath }}"
         
-        CHLOROPLAST_CMD="chloroplast build --root '${{ inputs.rootpath }}' --out '${{ inputs.outpath }}'"
+        # Check if docs directory exists relative to current directory
+        if [ -d "${{ inputs.rootpath }}" ]; then
+          echo "✓ docs directory found at: ${{ inputs.rootpath }}"
+          # Convert to absolute path for consistent handling
+          CONFIG_PATH="$(realpath "${{ inputs.rootpath }}")"
+          echo "✓ Resolved to absolute path: $CONFIG_PATH"
+        else
+          echo "✗ docs directory not found at: ${{ inputs.rootpath }}"
+          echo "Contents of current directory:"
+          ls -la
+          
+          # Try to find the root directory in common locations
+          if [ -d "${GITHUB_WORKSPACE}/${{ inputs.rootpath }}" ]; then
+            echo "✓ docs root found at workspace root: ${GITHUB_WORKSPACE}/${{ inputs.rootpath }}"
+            # Convert to absolute path for consistent handling
+            CONFIG_PATH="$(realpath "${GITHUB_WORKSPACE}/${{ inputs.rootpath }}")"
+            echo "✓ Resolved to absolute path: $CONFIG_PATH"
+          else
+            echo "✗ Config file not found at workspace root either"
+            echo "GITHUB_WORKSPACE contents:"
+            ls -la "${GITHUB_WORKSPACE}/" || echo "Cannot list GITHUB_WORKSPACE"
+            echo "::error::Config file '${{ inputs.rootpath }}' not found in working directory or workspace root"
+            exit 1
+          fi
+        fi
+        
+        # Build the command with required parameters using resolved config path
+        # Ensure output path is also absolute for consistency
+        OUTPUT_PATH="$(realpath -m "${{ inputs.outpath }}")"
+        echo "✓ Output path resolved to: $OUTPUT_PATH"
+        
+        CHLOROPLAST_CMD="chloroplast build --root '$CONFIG_PATH' --out '$OUTPUT_PATH'"
         
         # Add extra arguments if provided
         if [ -n "${{ inputs.extra_args }}" ]; then
