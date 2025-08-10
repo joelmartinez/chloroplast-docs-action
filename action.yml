@@ -16,7 +16,7 @@ inputs:
   version:
     description: 'Chloroplast tool version to install (if not using manifest)'
     required: false
-    default: 'latest'
+    default: '0.7.139'
   working_directory:
     description: 'Working directory for running commands'
     required: false
