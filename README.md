@@ -19,7 +19,7 @@ A reusable composite GitHub Action for building documentation with the [Chloropl
 - name: Build Docs with Chloroplast
   uses: joelmartinez/chloroplast-docs-action@main
   with:
-    config: docs/SiteMap.yml 
+    config: docs/SiteConfig.yml 
     outpath: tmp/docsout
 ```
 
@@ -32,7 +32,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
 - name: Build Docs with Chloroplast
   uses: joelmartinez/chloroplast-docs-action@main
   with:
-    config: docs/SiteMap.yml
+    config: docs/SiteConfig.yml
     outpath: docs-output
     manifest_directory: ./tools  # Directory containing dotnet-tools.json
 ```
@@ -44,7 +44,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
 - name: Build Docs with Chloroplast
   uses: joelmartinez/chloroplast-docs-action@main
   with:
-    config: src/docs/SiteMap.yml
+    config: docs/SiteConfig.yml
     outpath: build/documentation
     sdk_version: '8.0.x'
     version: '0.7.139'  # Specific Chloroplast tool version
@@ -96,7 +96,7 @@ jobs:
       - name: Build Documentation
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: .chloroplast/SiteMap.yml
+          config: docs/SiteConfig.yml
           outpath: public/docs
       
       - name: Upload Documentation
@@ -139,7 +139,7 @@ jobs:
       - name: Build Docs
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: docs/SiteMap.yml
+          config: docs/SiteConfig.yml
           outpath: dist/documentation
           # The action will automatically detect and use dotnet-tools.json
 ```
@@ -166,7 +166,7 @@ jobs:
       - name: Build Documentation
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: config/SiteMap.yml
+          config: docs/SiteConfig.yml
           outpath: docs-${{ matrix.os }}
           sdk_version: '8.0.x'
           extra_args: '--verbose'
