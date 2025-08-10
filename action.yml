@@ -3,8 +3,8 @@ description: 'A composite action to build documentation using the Chloroplast .N
 author: 'Joel Martinez'
 
 inputs:
-  config:
-    description: 'Path to the Chloroplast config file'
+  rootpath:
+    description: 'Path to the Chloroplast docs (this folder should contain SiteMap.yml)'
     required: true
   outpath:
     description: 'Path where to put the generated documentation output'
@@ -43,7 +43,7 @@ runs:
       run: |
         echo "::group::Environment Information"
         echo "Working directory: ${{ inputs.working_directory }}"
-        echo "Config file: ${{ inputs.config }}"
+        echo "Docs Root Path file: ${{ inputs.rootpath }}"
         echo "Output path: ${{ inputs.outpath }}"
         echo "SDK version: ${{ inputs.sdk_version }}"
         echo "Tool version: ${{ inputs.version }}"
@@ -110,43 +110,7 @@ runs:
       run: |
         echo "::group::Building documentation with Chloroplast"
         
-        # Debug: Show current working directory and config file location
-        echo "Current working directory: $(pwd)"
-        echo "Config file input: ${{ inputs.config }}"
-        echo "Output path input: ${{ inputs.outpath }}"
-        
-        # Check if config file exists relative to current directory
-        if [ -f "${{ inputs.config }}" ]; then
-          echo "✓ Config file found at: ${{ inputs.config }}"
-          # Convert to absolute path for consistent handling
-          CONFIG_PATH="$(realpath "${{ inputs.config }}")"
-          echo "✓ Resolved to absolute path: $CONFIG_PATH"
-        else
-          echo "✗ Config file not found at: ${{ inputs.config }}"
-          echo "Contents of current directory:"
-          ls -la
-          
-          # Try to find the config file in common locations
-          if [ -f "${GITHUB_WORKSPACE}/${{ inputs.config }}" ]; then
-            echo "✓ Config file found at workspace root: ${GITHUB_WORKSPACE}/${{ inputs.config }}"
-            # Convert to absolute path for consistent handling
-            CONFIG_PATH="$(realpath "${GITHUB_WORKSPACE}/${{ inputs.config }}")"
-            echo "✓ Resolved to absolute path: $CONFIG_PATH"
-          else
-            echo "✗ Config file not found at workspace root either"
-            echo "GITHUB_WORKSPACE contents:"
-            ls -la "${GITHUB_WORKSPACE}/" || echo "Cannot list GITHUB_WORKSPACE"
-            echo "::error::Config file '${{ inputs.config }}' not found in working directory or workspace root"
-            exit 1
-          fi
-        fi
-        
-        # Build the command with required parameters using resolved config path
-        # Ensure output path is also absolute for consistency
-        OUTPUT_PATH="$(realpath -m "${{ inputs.outpath }}")"
-        echo "✓ Output path resolved to: $OUTPUT_PATH"
-        
-        CHLOROPLAST_CMD="chloroplast build --config '$CONFIG_PATH' --output '$OUTPUT_PATH'"
+        CHLOROPLAST_CMD="chloroplast build --root '${{ inputs.rootpath }}' --out '${{ inputs.outpath }}'"
         
         # Add extra arguments if provided
         if [ -n "${{ inputs.extra_args }}" ]; then
