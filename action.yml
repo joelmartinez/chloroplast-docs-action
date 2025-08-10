@@ -118,7 +118,9 @@ runs:
         # Check if config file exists relative to current directory
         if [ -f "${{ inputs.config }}" ]; then
           echo "✓ Config file found at: ${{ inputs.config }}"
-          CONFIG_PATH="${{ inputs.config }}"
+          # Convert to absolute path for consistent handling
+          CONFIG_PATH="$(realpath "${{ inputs.config }}")"
+          echo "✓ Resolved to absolute path: $CONFIG_PATH"
         else
           echo "✗ Config file not found at: ${{ inputs.config }}"
           echo "Contents of current directory:"
@@ -127,7 +129,9 @@ runs:
           # Try to find the config file in common locations
           if [ -f "${GITHUB_WORKSPACE}/${{ inputs.config }}" ]; then
             echo "✓ Config file found at workspace root: ${GITHUB_WORKSPACE}/${{ inputs.config }}"
-            CONFIG_PATH="${GITHUB_WORKSPACE}/${{ inputs.config }}"
+            # Convert to absolute path for consistent handling
+            CONFIG_PATH="$(realpath "${GITHUB_WORKSPACE}/${{ inputs.config }}")"
+            echo "✓ Resolved to absolute path: $CONFIG_PATH"
           else
             echo "✗ Config file not found at workspace root either"
             echo "GITHUB_WORKSPACE contents:"
@@ -138,7 +142,11 @@ runs:
         fi
         
         # Build the command with required parameters using resolved config path
-        CHLOROPLAST_CMD="chloroplast build --config '$CONFIG_PATH' --output '${{ inputs.outpath }}'"
+        # Ensure output path is also absolute for consistency
+        OUTPUT_PATH="$(realpath -m "${{ inputs.outpath }}")"
+        echo "✓ Output path resolved to: $OUTPUT_PATH"
+        
+        CHLOROPLAST_CMD="chloroplast build --config '$CONFIG_PATH' --output '$OUTPUT_PATH'"
         
         # Add extra arguments if provided
         if [ -n "${{ inputs.extra_args }}" ]; then
@@ -164,12 +172,20 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       run: |
         echo "::group::Verifying output"
-        if [ -d "${{ inputs.outpath }}" ]; then
-          echo "::notice::Documentation output generated successfully at ${{ inputs.outpath }}"
+        # Resolve output path to absolute for verification
+        OUTPUT_PATH="$(realpath -m "${{ inputs.outpath }}")"
+        echo "Checking for output at: $OUTPUT_PATH"
+        
+        if [ -d "$OUTPUT_PATH" ]; then
+          echo "::notice::Documentation output generated successfully at $OUTPUT_PATH"
           echo "Output directory contents:"
-          ls -la "${{ inputs.outpath }}" | head -20
+          ls -la "$OUTPUT_PATH" | head -20
         else
-          echo "::warning::Output directory ${{ inputs.outpath }} not found"
+          echo "::warning::Output directory $OUTPUT_PATH not found"
+          # Also check relative path as fallback
+          if [ -d "${{ inputs.outpath }}" ]; then
+            echo "::notice::Documentation output found at relative path: ${{ inputs.outpath }}"
+          fi
         fi
         echo "::endgroup::"
 
