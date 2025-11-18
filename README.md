@@ -19,7 +19,7 @@ A reusable composite GitHub Action for building documentation with the [Chloropl
 - name: Build Docs with Chloroplast
   uses: joelmartinez/chloroplast-docs-action@main
   with:
-    config: docs/SiteConfig.yml 
+    rootpath: docs
     outpath: tmp/docsout
 ```
 
@@ -32,7 +32,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
 - name: Build Docs with Chloroplast
   uses: joelmartinez/chloroplast-docs-action@main
   with:
-    config: docs/SiteConfig.yml
+    rootpath: docs
     outpath: docs-output
     manifest_directory: ./tools  # Directory containing dotnet-tools.json
 ```
@@ -44,7 +44,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
 - name: Build Docs with Chloroplast
   uses: joelmartinez/chloroplast-docs-action@main
   with:
-    config: docs/SiteConfig.yml
+    rootpath: docs
     outpath: build/documentation
     sdk_version: '8.0.x'
     version: '0.7.139'  # Specific Chloroplast tool version
@@ -56,7 +56,7 @@ If your repository has a `dotnet-tools.json` file that includes the Chloroplast 
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `config` | Path to the Chloroplast config file | ✅ Yes | - |
+| `rootpath` | Path to the Chloroplast site where the SiteConfig.yml config file exists. | ✅ Yes | - |
 | `outpath` | Path where to put the generated documentation output | ✅ Yes | - |
 | `sdk_version` | .NET SDK version to use | No | `8.0.x` |
 | `version` | Chloroplast tool version to install (if not using manifest) | No | `latest` |
@@ -96,7 +96,7 @@ jobs:
       - name: Build Documentation
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: docs/SiteConfig.yml
+          rootpath: docs
           outpath: public/docs
       
       - name: Upload Documentation
@@ -139,7 +139,7 @@ jobs:
       - name: Build Docs
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: docs/SiteConfig.yml
+          rootpath: docs
           outpath: dist/documentation
           # The action will automatically detect and use dotnet-tools.json
 ```
@@ -166,7 +166,7 @@ jobs:
       - name: Build Documentation
         uses: joelmartinez/chloroplast-docs-action@main
         with:
-          config: docs/SiteConfig.yml
+          rootpath: docs
           outpath: docs-${{ matrix.os }}
           sdk_version: '8.0.x'
           extra_args: '--verbose'
